@@ -1,0 +1,187 @@
+{
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "e1f2b3c4-0000-0000-0000-000000000001",
+      "name": "Chat Trigger",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1,
+      "position": [
+        200,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "Eres un Agente de Asistencia Acad\u00e9mica Senior dise\u00f1ado para ayudar a estudiantes universitarios de ingenier\u00eda y otras facultades. \n\nREGLAS ESTRICTAS:\n1. Si no sabes la respuesta o no est\u00e1 en los documentos recuperados, di claramente: \"No tengo informaci\u00f3n oficial sobre esto en mi base de datos. Por favor, consulta con la coordinaci\u00f3n acad\u00e9mica.\" Nunca inventes informaci\u00f3n (cero alucinaciones).\n2. Mant\u00e9n un tono respetuoso, estructurado y motivador. Usa vi\u00f1etas y negritas para facilitar la lectura.\n3. Si el usuario hace preguntas fuera del contexto acad\u00e9mico, tecnol\u00f3gico o administrativo de la universidad, responde: \"Mi especialidad es la asistencia acad\u00e9mica y documental. \u00bfEn qu\u00e9 tema universitario te puedo ayudar hoy?\"\n4. Al explicar conceptos de ingenier\u00eda de software, s\u00e9 conciso y directo, dando ejemplos pr\u00e1cticos si aplica."
+        }
+      },
+      "id": "e1f2b3c4-0000-0000-0000-000000000002",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.6,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "model": "llama3.1",
+        "options": {}
+      },
+      "id": "e1f2b3c4-0000-0000-0000-000000000003",
+      "name": "Ollama Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        350,
+        500
+      ],
+      "credentials": {
+        "ollamaApi": {
+          "id": "CREAR_NUEVA_CREDENCIA",
+          "name": "Ollama Local"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 10,
+        "sessionId": "={{ $json.sessionId }}"
+      },
+      "id": "e1f2b3c4-0000-0000-0000-000000000004",
+      "name": "Window Buffer Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.2,
+      "position": [
+        500,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "name": "Consultar_Base_Conocimiento",
+        "description": "Llama a esta herramienta SIEMPRE que el estudiante pregunte sobre reglamentos, planes de estudio, microcurr\u00edculos, normativas de grado, fechas institucionales o cualquier documento oficial de la universidad."
+      },
+      "id": "e1f2b3c4-0000-0000-0000-000000000005",
+      "name": "Vector Store Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolVectorStore",
+      "typeVersion": 1,
+      "position": [
+        650,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "collectionName": "documentos_academicos",
+        "options": {}
+      },
+      "id": "e1f2b3c4-0000-0000-0000-000000000006",
+      "name": "Qdrant Vector Store",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1,
+      "position": [
+        650,
+        700
+      ],
+      "credentials": {
+        "qdrantApi": {
+          "id": "CREAR_NUEVA_CREDENCIA",
+          "name": "Qdrant Local"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "nomic-embed-text"
+      },
+      "id": "e1f2b3c4-0000-0000-0000-000000000007",
+      "name": "Ollama Embeddings",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+      "typeVersion": 1,
+      "position": [
+        650,
+        900
+      ],
+      "credentials": {
+        "ollamaApi": {
+          "id": "CREAR_NUEVA_CREDENCIA",
+          "name": "Ollama Local"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Chat Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Window Buffer Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vector Store Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qdrant Vector Store": {
+      "ai_vectorStore": [
+        [
+          {
+            "node": "Vector Store Tool",
+            "type": "ai_vectorStore",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Embeddings": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Qdrant Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
